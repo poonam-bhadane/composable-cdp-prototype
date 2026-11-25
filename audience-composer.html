@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Audience Composer — dummy UI prototype for a composable CDP</title>
+<meta name="description" content="An interactive prototype of the audience-building layer of a composable CDP. Simulated UI with no real systems behind it.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232563eb'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#f4f6fb;--panel:#fff;--fg:#1d2433;--muted:#667085;--border:#d9dfeb;--accent:#2563eb;--soft:#f1f4fa;
+--build:#b42318;--buildbg:#fee4e2;--buy:#175cd3;--buybg:#d1e9ff;--both:#b54708;--bothbg:#fef0c7;--ctl:#475467;--ctlbg:#eaecf0;
+--ann:#7c3aed;--code:#0f172a;--codefg:#e2e8f0;--ok:#067647;--okbg:#dcfae6;--warn:#b54708;--warnbg:#fffaeb;--err:#b42318}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1117;--panel:#161b22;--fg:#e6edf3;--muted:#9198a1;--border:#30363d;--soft:#1c232d;
+--buildbg:#3b1512;--buybg:#10243f;--bothbg:#3a2a0c;--ctlbg:#262c36;--build:#ff9c91;--buy:#8cc4ff;--both:#fdb64b;--ctl:#b6bdc9;
+--okbg:#0f2d1d;--ok:#6ce9a6;--warnbg:#2b2210;--warn:#fdb64b;--code:#010409;--err:#ff9c91}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding-bottom:300px}
+h1,h2,h3,h4{margin:0}
+code{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:12px}
+.top{position:sticky;top:0;z-index:60;background:var(--panel);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.top h1{font-size:17px}.top small{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+.spacer{flex:1}
+.btn{border:1px solid var(--border);background:var(--panel);color:var(--fg);padding:6px 12px;border-radius:8px;cursor:pointer;font:inherit}
+.btn:hover{border-color:var(--accent)}.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary{background:var(--ann);border-color:var(--ann);color:#fff}
+.sw{display:flex;gap:6px;align-items:center;cursor:pointer;font-weight:600}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.tag.build{background:var(--buildbg);color:var(--build)}.tag.buy{background:var(--buybg);color:var(--buy)}
+.tag.both{background:var(--bothbg);color:var(--both)}.tag.ctl{background:var(--ctlbg);color:var(--ctl)}
+.tag.cap{background:var(--soft);color:var(--muted);border:1px solid var(--border)}
+.intro{max-width:1500px;margin:14px auto 0;padding:0 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.intro div{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px}
+.intro b{display:block;margin-bottom:2px}
+.grid{max-width:1500px;margin:14px auto;padding:0 20px;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:16px;align-items:start}
+.side{position:sticky;top:62px;max-height:calc(100vh - 80px);overflow:auto;display:flex;flex-direction:column;gap:12px;padding:4px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:14px;position:relative}
+.side .card{margin-bottom:0}
+.card h2{font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.step{background:var(--accent);color:#fff;width:22px;height:22px;border-radius:6px;display:inline-grid;place-items:center;font-size:12px}
+.field{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0;position:relative}
+.field>.lb{min-width:130px;font-weight:600}
+.hint{color:var(--muted);font-size:12px;flex-basis:100%;margin-left:138px}
+.in{background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:7px;padding:5px 8px;font:inherit;max-width:100%}
+.in:focus{outline:2px solid var(--accent)}
+.w60{width:68px}.w120{width:130px}.w180{width:200px}.wide{width:min(520px,100%)}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--panel);color:var(--fg);padding:5px 11px;cursor:pointer;font:inherit}
+.seg button+button{border-left:1px solid var(--border)}.seg button.on{background:var(--accent);color:#fff}
+.chk{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+.chip{border:1px solid var(--border);background:var(--panel);color:var(--fg);padding:3px 10px;border-radius:999px;cursor:pointer;font:inherit;font-size:12px}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font:inherit;font-size:12px}.x:hover{color:var(--err)}
+.muted{color:var(--muted)}
+.tbl{border-collapse:collapse;width:100%;font-size:13px}
+.tbl th,.tbl td{border:1px solid var(--border);padding:6px 8px;text-align:left;vertical-align:middle}.tbl th{background:var(--soft)}
+.group{border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:10px;margin:8px 0;background:var(--soft);position:relative}
+.group .group{background:var(--panel);border-left-color:#0ea5a4}.group .group .group{border-left-color:#d97706}
+.ghead{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.cond{display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px 8px;margin:5px 0;position:relative}
+.group .group .cond{background:var(--soft)}
+.gadd{display:flex;gap:8px;margin-top:6px}
+.gadd button{border:1px dashed var(--border);background:none;color:var(--accent);cursor:pointer;border-radius:7px;padding:3px 10px;font:inherit}
+.empty{color:var(--muted);font-style:italic;padding:4px}
+.rg{display:grid;grid-template-columns:auto repeat(5,46px);gap:3px;align-items:center;margin:8px 0}
+.rg .c{height:30px;border:1px solid var(--border);border-radius:5px;background:var(--panel);cursor:pointer;font-size:11px;color:var(--muted)}
+.rg .c.on{background:var(--accent);border-color:var(--accent);color:#fff}.rg .ax{font-size:11px;color:var(--muted);text-align:center}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:8px 0;position:relative}
+.node{border:1px solid var(--border);background:var(--panel);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:5px;min-width:170px;position:relative}
+.node.absent{border-style:dashed;border-color:var(--build)}
+.nlabel{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.arrow{display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:12px;color:var(--muted);gap:3px}
+.dim{opacity:.5}
+.out{background:var(--code);color:var(--codefg);border-radius:10px;padding:12px;font:12px/1.5 "SF Mono",Menlo,Consolas,monospace;white-space:pre-wrap;overflow:auto;max-height:360px;margin:0}
+.tabs{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.plan{padding:0;margin:0}.plan li{margin:6px 0;list-style:none;display:flex;gap:8px;align-items:flex-start}
+.wl{padding:7px 10px;border-radius:8px;margin:5px 0;font-size:13px}
+.wl.warn{background:var(--warnbg);color:var(--warn)}.wl.ok{background:var(--okbg);color:var(--ok)}.wl.info{background:var(--soft);color:var(--muted)}
+.est{font-size:15px;margin:8px 0}
+.coverage{max-width:1500px;margin:0 auto 20px;padding:0 20px}
+.badge{display:none;position:absolute;top:-11px;left:-11px;width:22px;height:22px;border-radius:50%;background:var(--ann);color:#fff;font:700 12px/22px sans-serif;text-align:center;cursor:pointer;z-index:5;box-shadow:0 1px 4px #0005}
+.badge.active{background:#f59e0b;transform:scale(1.3)}
+.overlay-on .badge{display:block}
+.overlay-on .ann-target{outline:2px dashed #7c3aed88;outline-offset:3px;border-radius:8px}
+.ann-target{position:relative;scroll-margin-top:100px}
+.explainer{position:fixed;left:0;right:0;bottom:0;z-index:70;background:var(--panel);border-top:2px solid var(--ann);box-shadow:0 -4px 16px #0003;max-height:42vh;overflow:auto}
+.exp-bar{display:flex;gap:10px;align-items:center;padding:8px 20px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--panel)}
+.exp-body{display:grid;grid-template-columns:1.1fr 1.3fr 1.8fr 1fr;gap:18px;padding:12px 20px}
+.exp-body h4{font-size:12px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.exp-num{background:var(--ann);color:#fff;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;margin-bottom:6px}
+.exp-body p{margin:0 0 6px}.exp-body code{background:var(--soft);padding:1px 5px;border-radius:5px}
+.exp-body .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+#toast{position:fixed;top:70px;right:20px;background:#111;color:#fff;padding:8px 14px;border-radius:8px;z-index:90;display:none}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}.side{position:static;max-height:none}.intro{grid-template-columns:1fr 1fr}.exp-body{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="btn" href="index.html" style="text-decoration:none">← Architecture overview</a>
+  <h1>Audience Composer <small>dummy UI prototype · authoring layer of a composable CDP</small></h1>
+  <span class="muted">Scenario:</span>
+  <div class="seg" id="presets"></div>
+  <span class="spacer"></span>
+  <span class="tag build">BUILD · Flink</span><span class="tag buy">BUY · reverse-ETL</span><span class="tag both">BUY + BUILD</span><span class="tag ctl">CONTROL PLANE</span>
+  <label class="sw"><input type="checkbox" id="ovl"> Functionality overlay</label>
+  <button class="btn primary" id="tour">▶ Start walkthrough</button>
+</header>
+<div class="intro">
+  <div><b>1 · This is a dummy prototype</b>A prototype developed to show how audiences are created in a composable CDP. Nothing is saved or sent, and no real systems or customer data sit behind it.</div>
+  <div><b>2 · Turn on the overlay</b>Purple numbered badges mark each control. Click one to see what the marketer does and what the system does.</div>
+  <div><b>3 · Watch the right side</b>Every edit regenerates the JSON spec, illustrative SQL and the buy-vs-build plan. The UI emits a definition and never computes audiences.</div>
+  <div><b>4 · Pick a scenario</b>Load a preset (real-time, sequence or batch) to see how different rules change the compiled output and the warnings.</div>
+</div>
+<div class="grid">
+  <main id="builder"></main>
+  <aside class="side">
+    <div class="card ann-target"><span class="badge" data-ann="21">21</span><h2>Validation</h2><div id="warnings"></div></div>
+    <div class="card ann-target"><span class="badge" data-ann="20">20</span><h2>Live outputs</h2><div class="tabs" id="tabs"></div><div id="outBox"></div></div>
+  </aside>
+</div>
+<section class="coverage">
+  <div class="card"><h2>Capability coverage — which control delivers which requirement</h2>
+  <p class="muted">These are the capabilities a marketer needs to build an audience, and the table shows how each one is delivered by a mix of bought tools and custom-built components. Click a badge number to jump to the control.</p>
+  <table class="tbl" id="cov"></table></div>
+  <div class="card"><h2>Not shown in this mockup, but required in a real build</h2><ul id="gaps"></ul></div>
+</section>
+<div class="explainer" id="explainer">
+  <div class="exp-bar"><b>Functionality explainer</b><span class="muted" id="expCount"></span><span class="spacer"></span>
+    <button class="btn" id="prev">◀ Prev</button><button class="btn" id="next">Next ▶</button><button class="btn" id="expToggle">Collapse</button></div>
+  <div class="exp-body" id="expBody"></div>
+</div>
+<div id="toast"></div>
+<script>
+'use strict';
+let uid=1;const nid=()=>'n'+(uid++);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const opts=(l,sel)=>l.map(v=>`<option value="${esc(v)}"${String(v)===String(sel)?' selected':''}>${esc(v)}</option>`).join('');
+const B=n=>`<span class="badge" data-ann="${n}" title="What does this do?">${n}</span>`;
+const slug=s=>(String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,''))||'audience';
+const hash=s=>{let h=0;for(const ch of String(s))h=(h*31+ch.charCodeAt(0))>>>0;return h};
+const EVENTS=['product_view','add_to_cart','checkout','purchase','app_open','email_click'];
+const UNITS=['minutes','hours','days'];
+const UMIN={minutes:1,hours:60,days:1440};
+const AUDIENCES=['existing_email_subscribers','unsubscribed','recent_purchasers_7d','employees','high_ltv_churn_risk'];
+const RFMF=['recency score','frequency score','monetary score'];
+const AGGS=['count of events','sum of property','average of property','days since last event'];
+const OPS={string:['=','!=','in','contains'],number:['=','!=','>','>=','<','<='],boolean:['is true','is false'],
+  event:['performed at least','did not perform'],rfm:['>=','<=','='],audience:['is member of','is not member of']};
+const DESTS={braze:'Braze',meta_ads:'Meta Ads (custom audience)',google_ads:'Google Ads (customer match)',email_esp:'Email ESP',webhook:'Webhook'};
+const SYNC=['near real-time','hourly','daily'];
+const TAGS={build:'BUILD · Flink',buy:'BUY · reverse-ETL / connectors',both:'BUY + BUILD',ctl:'CONTROL PLANE'};
+const tag=k=>`<span class="tag ${k}">${TAGS[k]}</span>`;
+const COV=[
+ ['Real-time event in segment evaluation',[2,3],'Evaluation mode switch and the live-events source','Flink per-event job','build'],
+ ['Batch / historical data in evaluation',[3],'Historical-data source and Batch mode','Lakehouse SQL run by reverse-ETL','buy'],
+ ['Lookback period in evaluation',[4],'Lookback window control','Flink windows or lakehouse scan range','both'],
+ ['Recency and frequency (RFM)',[11,12],'RFM scorecard and the R × F grid','Flink aggregations + daily lakehouse snapshot','both'],
+ ['Entry criteria',[7,8],'Entry rule builder with AND/OR groups','Flink predicate or lakehouse SQL','both'],
+ ['Exit criteria',[9,10],'Exit rules, auto-exit and re-entry cool-down','Flink + Redis SREM','build'],
+ ['Sequencing (A then B)',[13,14],'Sequence builder with an absence step','Flink CEP / MATCH_RECOGNIZE','build'],
+ ['Downstream activation',[17,18],'Destinations, sync mode and payload','Kafka → workers → connectors','buy'],
+ ['Suppression',[15,16],'Exclusion lists, frequency cap and consent','Redis sets + activation workers','both'],
+ ['Supporting: customer attributes (traits)',[5,6],'Attribute manager and new-attribute form','Flink aggregations + CDC / reverse-ETL','both'],
+ ['Supporting: size estimate and preview',[19],'Review card','Sampled lakehouse query','ctl'],
+ ['Supporting: spec, plan and validation',[20,21],'Right-hand panel','Compiler + validator','ctl']];
+const GAPS=['Identity resolution (deciding which records are the same person). It sits upstream of this UI and is a major build item.',
+ 'Roles, approvals and an audit log of who changed which audience.',
+ 'Versioning, backfill and safe editing of a live audience (state migration or replay).',
+ 'Connector setup: credentials, field mapping, retries and rate limits.',
+ 'A consent and preference management UI.',
+ 'A/B tests and holdout groups.',
+ 'Cost controls and observability for the streaming jobs.'];
+const ANN={
+1:{t:'Audience identity',cap:'Control plane (metadata)',eng:'ctl',comp:'Config store (e.g. Postgres) · audience registry',spec:'audience_id, name, description',
+ who:'Names the audience and says why it exists. The name becomes a stable audience_id (a slug).',
+ sys:'Saved as audience_id + version in the config store. The id is reused as the Redis key (audience:<id>) and on every Kafka "entered / exited" event, so activation and reporting always point at the same thing.'},
+2:{t:'Evaluation mode',cap:'Real-time event in segment evaluation',eng:'both',comp:'Flink (real-time) · reverse-ETL on the lakehouse (batch)',spec:'evaluation: realtime | batch | hybrid',
+ who:'Chooses how fresh membership has to be: Real-time (per event), Batch (scheduled) or Hybrid (both).',
+ sys:'A router decides where the audience runs. Real-time compiles to a Flink job that re-evaluates on every event. Batch becomes SQL on the lakehouse run by a reverse-ETL tool. Hybrid does both and writes to the same membership store, tagged with a source column.'},
+3:{t:'Data sources',cap:'Batch / historical data in evaluation',eng:'both',comp:'Kafka · lakehouse (Iceberg) · compacted reference topic',spec:'sources.live_events / historical / reference_attributes',
+ who:'Ticks which data the audience may use: live events, historical data and reference attributes such as loyalty tier.',
+ sys:'Live events are read from Kafka. Historical data comes from lakehouse tables, read by the batch job or as a Flink lookup. Reference attributes arrive through CDC or reverse-ETL onto a compacted topic and are joined with a temporal join.'},
+4:{t:'Lookback window',cap:'Lookback period in evaluation',eng:'both',comp:'Flink windows · lakehouse scan range',spec:'lookback.{n, unit}',
+ who:'Sets how far back the rules look, for example the last 60 days.',
+ sys:'Becomes an event-time window (Flink) or an INTERVAL filter (batch). Short windows live in Flink state. Very long ones, such as 730 days, need big state or a lakehouse-assisted hybrid, which is why the validator raises a warning.'},
+5:{t:'Attribute manager',cap:'Customer attributes (traits)',eng:'both',comp:'Attribute store: compacted topic + Redis · lakehouse',spec:'attributes[]',
+ who:'Sees every attribute the rule builder can use, where it comes from and how fresh it is.',
+ sys:'Computed attributes are Flink aggregation jobs that write to the attribute store. Reference attributes arrive from the warehouse by CDC or reverse-ETL. All of them show up in the rule-builder dropdowns, so marketers never write joins.'},
+6:{t:'New attribute form',cap:'Customer attributes (traits)',eng:'build',comp:'Flink keyed aggregation',spec:'attributes[].definition',
+ who:'Defines a new trait from events: pick an aggregation, an event, an optional filter and a window.',
+ sys:'Compiles to a keyed aggregation job (count, sum, average, days since last) keyed by customer_id. History is backfilled from the lakehouse so the value is right from day one. The attribute then appears in the rule dropdowns.'},
+7:{t:'Entry rule builder',cap:'Entry criteria',eng:'both',comp:'Flink SQL WHERE · lakehouse SQL',spec:'entry.rules {all | any: [...]}',
+ who:'Builds the "who qualifies" logic with nested ALL (AND) and ANY (OR) groups.',
+ sys:'The tree is saved as JSON and compiled into one WHERE predicate. The first time it turns true for a customer, the engine adds them to the membership set (SADD) and emits an "entered" event.'},
+8:{t:'Condition row',cap:'Entry criteria',eng:'both',comp:'Temporal join · windowed counts · score attributes',spec:'entry.rules.all[n]',
+ who:'Picks a type (attribute, event, RFM or audience), a field, an operator and a value. The operators change with the data type.',
+ sys:'Attribute conditions use a temporal join to the attribute store. Event conditions become windowed counts on the click stream. RFM conditions read score attributes. Audience conditions look up membership in another set.'},
+9:{t:'Exit rule builder',cap:'Exit criteria',eng:'build',comp:'Flink · Redis SREM',spec:'exit.rules',
+ who:'Defines when a member leaves the audience, for example after a purchase.',
+ sys:'A second predicate is evaluated per event. When it turns true the customer is removed (SREM) and an "exited" event goes to activation. Reverse-ETL tools poll on a schedule, so exits are their weak spot. That is why this part is built on Flink.'},
+10:{t:'Auto-exit and re-entry',cap:'Exit criteria',eng:'build',comp:'Redis TTL · Flink timers · keyed state',spec:'exit.when_entry_false, max_days, reentry_cooldown_days',
+ who:'Sets an automatic exit after N days, an optional "exit when entry rules stop matching" and a cool-down before someone can re-enter.',
+ sys:'Maximum duration is a Redis TTL or a Flink timer per member. The cool-down is kept in keyed state so a customer cannot bounce in and out and trigger repeated sends.'},
+11:{t:'RFM scorecard',cap:'Recency and frequency (RFM)',eng:'both',comp:'Flink windowed aggregations · daily lakehouse snapshot',spec:'rfm.thresholds {r, f, m}',
+ who:'Defines how Recency, Frequency and Monetary values turn into scores from 1 to 5.',
+ sys:'Recency = now minus last purchase. Frequency = purchase count in the window. Monetary = spend in the window. Thresholds map each value to a score. The scores are written back as attributes: live in Redis and daily in the lakehouse snapshot.'},
+12:{t:'RFM grid',cap:'Recency and frequency (RFM)',eng:'both',comp:'Predicate on score attributes',spec:'entry.rfm.cells, min_m',
+ who:'Clicks the Recency × Frequency cells that should qualify (or uses a preset such as "At risk") and sets a minimum monetary score.',
+ sys:'Compiles to a predicate on the r / f / m score attributes and is ANDed into the entry rules. Presets are just saved cell selections.'},
+13:{t:'Sequence builder',cap:'Sequencing (A then B)',eng:'build',comp:'Flink CEP · MATCH_RECOGNIZE',spec:'entry.sequence.steps[]',
+ who:'Chains steps in order, each with a time window: viewed a product, then added to cart within 30 minutes.',
+ sys:'Compiles to a Flink CEP pattern (A followedBy B within W). Flink keeps partial-match state for every customer. This is the hardest capability and the one most reverse-ETL tools cannot do.'},
+14:{t:'Absence step',cap:'Sequencing (A then B)',eng:'build',comp:'Flink keyed timers · watermarks',spec:'entry.sequence.not',
+ who:'Adds "and did NOT do X within N minutes", for example no checkout after add to cart.',
+ sys:'A timer starts when the last step completes. If the window closes without the event, the customer qualifies, at window close and not at the last step, so there is an intentional delay. It needs processing-time timers or idle-watermark handling to fire on time.'},
+15:{t:'Suppression lists',cap:'Suppression',eng:'both',comp:'Redis sets · SDIFF at activation',spec:'suppression.lists[]',
+ who:'Chooses audiences or lists to exclude, such as unsubscribed users or recent purchasers.',
+ sys:'Each exclusion is another set in Redis. At activation the system takes the audience minus all suppression sets (SDIFF), so exclusions apply whichever engine qualified the customer.'},
+16:{t:'Frequency cap and consent',cap:'Suppression',eng:'both',comp:'Activation workers · consent store',spec:'suppression.frequency_cap, consent_required',
+ who:'Limits how often one customer can be messaged and requires marketing consent.',
+ sys:'Enforced by the activation workers (or the messaging tool) at send time, using the consent store and a per-customer send counter. It sits at the last step, so it also covers customers who sit in several audiences.'},
+17:{t:'Destinations',cap:'Downstream connection / activation',eng:'buy',comp:'Kafka "qualified" topic → workers → connectors',spec:'activation.destinations[]',
+ who:'Selects where members are sent: Braze, ad platforms, an ESP or a webhook.',
+ sys:'Entered and exited events go onto a Kafka topic. Activation workers call each channel API with retries and rate limits. Maintaining that connector catalog is the part most teams buy from a reverse-ETL vendor.'},
+18:{t:'Sync mode and payload',cap:'Downstream connection / activation',eng:'buy',comp:'Activation workers · profile cache (Redis)',spec:'activation.sync, payload, on_enter, on_exit',
+ who:'Chooses near real-time or scheduled sync, which attributes travel with the member and what enter / exit should do in the destination.',
+ sys:'Near real-time consumes the stream immediately. Scheduled sync batches on a cron. Payload fields are read from the profile cache. Enter and exit are mapped to add / remove actions in the destination.'},
+19:{t:'Size estimate and preview',cap:'Supporting: preview',eng:'ctl',comp:'Sampled lakehouse query or sketches',spec:'(not part of the spec)',
+ who:'Sanity-checks the audience before launching: approximate size and a few example members.',
+ sys:'The live engine never runs for a preview. A sampled query or sketch on the lakehouse returns an approximate count and sample rows. The numbers on this page are dummy values from a fake formula.'},
+20:{t:'Live outputs',cap:'Principle: the UI emits a definition',eng:'ctl',comp:'Compiler service',spec:'spec → compiler → jobs',
+ who:'Sees exactly what the UI hands over: the JSON spec, the compiled job and the execution plan.',
+ sys:'The UI never computes audiences. It emits this JSON spec. A compiler turns it into Flink jobs and/or lakehouse SQL, and the plan shows which parts run on bought tools and which on the built stream layer. The SQL here is simplified and illustrative.'},
+21:{t:'Validation guardrails',cap:'Supporting: safety',eng:'ctl',comp:'Spec validator',spec:'validation rules',
+ who:'Gets warnings before deploying, for example sequencing combined with batch mode.',
+ sys:'A validator checks the spec against engine limits (long lookbacks in real time, sequences that need real time, missing exits, no destination, missing consent) and warns or blocks before any job is created.'}};
+const cond=(kind,field,op,value,x)=>Object.assign({id:nid(),type:'cond',kind,field,op,value,w:30,u:'days',prop:''},x||{});
+const grp=(op,children)=>({id:nid(),type:'group',op,children});
+const cells=(r,f)=>{const o=[];for(let a=r[0];a<=r[1];a++)for(let b=f[0];b<=f[1];b++)o.push(a+'-'+b);return o};
+const RFM_PRESETS={champions:[[4,5],[4,5]],loyal:[[3,5],[3,5]],atrisk:[[1,2],[3,5]],newc:[[4,5],[1,2]]};
+const baseAttrs=()=>[
+ {name:'loyalty_tier',type:'string',kind:'reference',def:'CRM loyalty table (CDC)',refresh:'nightly'},
+ {name:'market',type:'string',kind:'reference',def:'CRM country (CDC)',refresh:'nightly'},
+ {name:'ltv_eur',type:'number',kind:'reference',def:'lakehouse: lifetime value',refresh:'nightly'},
+ {name:'churn_probability',type:'number',kind:'reference',def:'lakehouse: ML churn score',refresh:'nightly'},
+ {name:'is_subscriber',type:'boolean',kind:'reference',def:'consent store',refresh:'nightly'},
+ {name:'days_since_last_purchase',type:'number',kind:'computed',def:'days since last purchase event',refresh:'real-time'},
+ {name:'purchases_30d',type:'number',kind:'computed',def:'count of purchase events · last 30 days',refresh:'real-time'}];
+const baseAct=()=>({dests:{braze:{on:true,sync:'near real-time'},meta_ads:{on:false,sync:'daily'},google_ads:{on:false,sync:'daily'},
+ email_esp:{on:false,sync:'hourly'},webhook:{on:false,sync:'near real-time'}},payload:['customer_id','loyalty_tier','market'],
+ onEnter:'add to destination list',onExit:'remove from destination list'});
+const baseRfm=()=>({use:false,windowDays:365,r:{5:7,4:30,3:60,2:120},f:{5:8,4:4,3:2,2:1},m:{5:1000,4:400,3:150,2:50},cells:[],minM:3});
+const baseSeq=()=>({enabled:false,steps:[{event:'product_view',prop:'category = dog_food_premium'},
+ {event:'add_to_cart',prop:'',within:30,unit:'minutes'}],absence:{enabled:true,event:'checkout',n:30,u:'minutes'}});
+const mk=o=>Object.assign({name:'',desc:'',mode:'realtime',sources:{live:true,hist:true,ref:true},lookback:{n:60,u:'days'},
+ attributes:baseAttrs(),entry:grp('all',[]),exit:grp('any',[]),exitOpts:{whenEntryFalse:false,maxDays:30,cooldown:7},
+ rfm:baseRfm(),seq:baseSeq(),supp:{lists:['existing_email_subscribers'],capN:3,capDays:7,consent:true},act:baseAct()},o);
+const PRESETS={
+ lapsing:{label:'Lapsing premium dog owners (real-time)',make:()=>mk({name:'Lapsing premium dog owners',
+  desc:'Platinum customers at risk of lapsing who just looked at premium dog food',
+  entry:grp('all',[cond('event','product_view','performed at least',1,{w:30,prop:'category = dog_food_premium'}),cond('attribute','loyalty_tier','=','platinum')]),
+  exit:grp('any',[cond('event','purchase','performed at least',1,{w:1})]),
+  rfm:Object.assign(baseRfm(),{use:true,cells:cells([1,2],[3,5])})})},
+ cart:{label:'Cart abandoners (sequence)',make:()=>mk({name:'Cart abandoners',desc:'Viewed a product, added it to the cart, but did not check out',
+  lookback:{n:1,u:'days'},sources:{live:true,hist:false,ref:true},
+  entry:grp('all',[cond('attribute','market','in','DE, AT')]),
+  exit:grp('any',[cond('event','purchase','performed at least',1,{w:1})]),exitOpts:{whenEntryFalse:false,maxDays:2,cooldown:3},
+  seq:Object.assign(baseSeq(),{enabled:true}),supp:{lists:['recent_purchasers_7d','unsubscribed'],capN:2,capDays:7,consent:true}})},
+ churn:{label:'High-LTV churn risk (batch)',make:()=>{const a=baseAct();a.dests.braze.sync='daily';a.dests.meta_ads.on=true;
+  return mk({name:'High-LTV churn risk',desc:'High lifetime value customers with a high churn score, built nightly on the lakehouse',
+  mode:'batch',sources:{live:false,hist:true,ref:true},lookback:{n:180,u:'days'},
+  entry:grp('all',[cond('attribute','ltv_eur','>=',500),cond('attribute','churn_probability','>',0.7)]),
+  exit:grp('any',[cond('attribute','churn_probability','<',0.4)]),exitOpts:{whenEntryFalse:false,maxDays:0,cooldown:14},
+  supp:{lists:['employees'],capN:1,capDays:14,consent:true},act:a})}}};
+let S=PRESETS.lapsing.make();
+const UI={tab:'spec',ann:0,preset:'lapsing',expOpen:true,newErr:'',newAttr:{name:'',agg:AGGS[0],event:'purchase',prop:'',w:90,u:'days'}};
+const attrType=n=>(S.attributes.find(a=>a.name===n)||{}).type||'string';
+const fieldOptions=k=>k==='attribute'?S.attributes.map(a=>a.name):k==='event'?EVENTS:k==='rfm'?RFMF:AUDIENCES;
+const opsFor=c=>c.kind==='attribute'?OPS[attrType(c.field)]:OPS[c.kind];
+const defVal=c=>c.kind==='event'?1:c.kind==='rfm'?3:c.kind==='attribute'&&attrType(c.field)==='number'?0:'';
+function resetCond(c){c.field=fieldOptions(c.kind)[0];c.op=opsFor(c)[0];c.value=defVal(c)}
+function find(id,n){if(n.id===id)return n;if(n.children)for(const c of n.children){const f=find(id,c);if(f)return f}return null}
+const findNode=id=>find(id,S.entry)||find(id,S.exit);
+function parentOf(id,n){if(n.children)for(const c of n.children){if(c.id===id)return n;const f=parentOf(id,c);if(f)return f}return null}
+function eachCond(n,fn){if(n.children)n.children.forEach(c=>eachCond(c,fn));else fn(n)}
+function setPath(path,val){const p=path.split('.');let o=p[0]==='ui'?(p.shift(),UI):S;for(let i=0;i<p.length-1;i++)o=o[p[i]];o[p[p.length-1]]=val}
+function togglePath(path,val){let o=S;for(const k of path.split('.'))o=o[k];const i=o.indexOf(val);if(i<0)o.push(val);else o.splice(i,1)}
+function secBasics(){
+ const hints={realtime:'Runs as a Flink job. Membership updates within about a second of the event.',
+  batch:'Runs as SQL on the lakehouse via a reverse-ETL tool. Membership refreshes on a schedule.',
+  hybrid:'Flink keeps membership fresh between scheduled lakehouse runs. Both write to one shared store.'};
+ const modes=[['realtime','Real-time (per event)'],['batch','Batch (scheduled)'],['hybrid','Hybrid']];
+ const src=(k,l)=>`<label class="chk"><input type="checkbox" data-act="cfg" data-path="sources.${k}" ${S.sources[k]?'checked':''}> ${l}</label>`;
+ return `<section class="card"><h2><span class="step">A</span> Audience basics</h2>
+ <div class="ann-target">${B(1)}
+  <div class="field"><label class="lb">Name</label><input class="in wide" data-act="cfg" data-path="name" value="${esc(S.name)}"></div>
+  <div class="field"><label class="lb">Description</label><input class="in wide" data-act="cfg" data-path="desc" value="${esc(S.desc)}"></div></div>
+ <div class="field ann-target">${B(2)}<label class="lb">Evaluation mode</label><div class="seg">${modes.map(([v,l])=>`<button class="${S.mode===v?'on':''}" data-act="cfgbtn" data-path="mode" data-val="${v}">${l}</button>`).join('')}</div><div class="hint">${hints[S.mode]}</div></div>
+ <div class="field ann-target">${B(3)}<label class="lb">Data sources</label>${src('live','Live events (Kafka)')}${src('hist','Historical data (lakehouse)')}${src('ref','Reference attributes (CDC)')}</div>
+ <div class="field ann-target">${B(4)}<label class="lb">Lookback window</label><input class="in w60" type="number" min="1" data-act="cfg" data-num="1" data-path="lookback.n" value="${S.lookback.n}"><select class="in" data-act="cfg" data-path="lookback.u">${opts(UNITS,S.lookback.u)}</select></div></section>`;
+}
+function secAttrs(){
+ const rows=S.attributes.map(a=>`<tr><td><code>${esc(a.name)}</code></td><td>${a.type}</td><td>${a.kind}</td><td>${esc(a.def)}</td><td>${a.refresh}</td><td>${a.kind==='computed'?`<button class="x" data-act="delattr" data-name="${esc(a.name)}">remove</button>`:''}</td></tr>`).join('');
+ const n=UI.newAttr;
+ return `<section class="card ann-target">${B(5)}<h2><span class="step">B</span> Customer attributes (traits)</h2>
+ <table class="tbl"><tr><th>Attribute</th><th>Type</th><th>Origin</th><th>Definition</th><th>Refresh</th><th></th></tr>${rows}</table>
+ <div class="field ann-target" style="margin-top:16px">${B(6)}<label class="lb">New attribute</label>
+  <input class="in w120" placeholder="snake_case_name" data-act="cfg" data-path="ui.newAttr.name" value="${esc(n.name)}">
+  <select class="in" data-act="cfg" data-path="ui.newAttr.agg">${opts(AGGS,n.agg)}</select>
+  <select class="in" data-act="cfg" data-path="ui.newAttr.event">${opts(EVENTS,n.event)}</select>
+  <input class="in w180" placeholder="where (optional)" data-act="cfg" data-path="ui.newAttr.prop" value="${esc(n.prop)}">
+  <span>last</span><input class="in w60" type="number" min="1" data-act="cfg" data-num="1" data-path="ui.newAttr.w" value="${n.w}">
+  <select class="in" data-act="cfg" data-path="ui.newAttr.u">${opts(UNITS,n.u)}</select>
+  <button class="btn" data-act="addattr">+ Add attribute</button><span class="hint" style="color:var(--err)">${esc(UI.newErr)}</span></div></section>`;
+}
+function rCond(c,ctx){
+ const sel=(p,list,st)=>`<select class="in" data-act="set" ${st?'data-struct="1" ':''}data-id="${c.id}" data-prop="${p}">${opts(list,c[p])}</select>`;
+ const inp=(p,t,cls,ph)=>`<input class="in ${cls}" type="${t}" ${t==='number'?'min="0" step="any" ':''}data-act="set" data-id="${c.id}" data-prop="${p}" placeholder="${ph||''}" value="${esc(c[p])}">`;
+ let v='';
+ if(c.kind==='attribute'){const t=attrType(c.field);if(t!=='boolean')v=inp('value',t==='number'?'number':'text','w120',c.op==='in'?'a, b, c':'value')}
+ else if(c.kind==='event'){
+  if(c.op==='performed at least')v=inp('value','number','w60')+' <span>times</span>';
+  v+=' <span>in last</span>'+inp('w','number','w60')+sel('u',UNITS)+inp('prop','text','w180','where e.g. category = dog_food_premium')}
+ else if(c.kind==='rfm')v=sel('value',['1','2','3','4','5']);
+ const bd=ctx.cb?B(ctx.cb):'',cls=ctx.cb?' ann-target':'';ctx.cb=0;
+ return `<div class="cond${cls}">${bd}${sel('kind',['attribute','event','rfm','audience'],1)}${sel('field',fieldOptions(c.kind),1)}${sel('op',opsFor(c),1)}${v}<button class="x" data-act="del" data-id="${c.id}" title="Remove">✕</button></div>`;
+}
+function rGroup(g,d,ctx){
+ const kids=g.children.map(c=>c.type==='group'?rGroup(c,d+1,ctx):rCond(c,ctx)).join('')||'<div class="empty">No conditions yet. Add one below.</div>';
+ const seg=[['all','ALL (AND)'],['any','ANY (OR)']].map(([v,l])=>`<button class="${g.op===v?'on':''}" data-act="op" data-id="${g.id}" data-val="${v}">${l}</button>`).join('');
+ const root=d===0&&ctx.gb;
+ return `<div class="group${root?' ann-target':''}">${root?B(ctx.gb):''}<div class="ghead"><span>Match</span><div class="seg">${seg}</div><span>of the following</span>${d>0?`<button class="x" data-act="del" data-id="${g.id}">remove group</button>`:''}</div>${kids}<div class="gadd"><button data-act="addcond" data-id="${g.id}">+ condition</button><button data-act="addgroup" data-id="${g.id}">+ group</button></div></div>`;
+}
+function secEntry(){const ctx={gb:7,cb:8};
+ return `<section class="card"><h2><span class="step">C</span> Entry criteria — who qualifies</h2>${rGroup(S.entry,0,ctx)}<p class="muted">RFM (section E) and the sequence (section F) are ANDed with these rules when they are switched on.</p></section>`}
+function secExit(){const ctx={gb:9,cb:0},o=S.exitOpts;
+ return `<section class="card"><h2><span class="step">D</span> Exit criteria — who leaves</h2>${rGroup(S.exit,0,ctx)}
+ <div class="field ann-target">${B(10)}<label class="chk"><input type="checkbox" data-act="cfg" data-path="exitOpts.whenEntryFalse" ${o.whenEntryFalse?'checked':''}> Also exit when the entry rules stop matching</label>
+ <span>Auto-exit after</span><input class="in w60" type="number" min="0" data-act="cfg" data-num="1" data-path="exitOpts.maxDays" value="${o.maxDays}">
+ <span>days (0 = never). Re-entry cool-down</span><input class="in w60" type="number" min="0" data-act="cfg" data-num="1" data-path="exitOpts.cooldown" value="${o.cooldown}"><span>days</span></div></section>`}
+function secRfm(){
+ const r=S.rfm;
+ const cell=(m,s,pre)=>`<td>${pre}<input class="in w60" type="number" min="0" data-act="cfg" data-num="1" data-path="rfm.${m}.${s}" value="${r[m][s]}"></td>`;
+ const row=(m,name,metric,pre)=>`<tr><td><b>${m.toUpperCase()}</b> ${name}</td><td>${metric}</td>${[5,4,3,2].map(s=>cell(m,s,pre)).join('')}<td>otherwise</td></tr>`;
+ let grid='<div></div>'+[1,2,3,4,5].map(f=>`<div class="ax">F${f}</div>`).join('');
+ for(let a=5;a>=1;a--)grid+=`<div class="ax">R${a}</div>`+[1,2,3,4,5].map(f=>`<button class="c${r.cells.includes(a+'-'+f)?' on':''}" data-act="rfmcell" data-key="${a}-${f}">${a}·${f}</button>`).join('');
+ const pre=[['champions','Champions'],['loyal','Loyal'],['atrisk','At risk'],['newc','New / recent'],['clear','Clear']].map(([k,l])=>`<button class="chip" data-act="rfmpreset" data-val="${k}">${l}</button>`).join(' ');
+ return `<section class="card"><h2><span class="step">E</span> RFM scoring</h2>
+ <label class="chk"><input type="checkbox" data-act="cfg" data-path="rfm.use" ${r.use?'checked':''}> Use RFM in the entry rules</label>
+ <div class="ann-target" style="margin-top:12px">${B(11)}<table class="tbl"><tr><th>Dim.</th><th>Metric (window <input class="in w60" type="number" min="1" data-act="cfg" data-num="1" data-path="rfm.windowDays" value="${r.windowDays}"> days)</th><th>Score 5</th><th>Score 4</th><th>Score 3</th><th>Score 2</th><th>Score 1</th></tr>
+ ${row('r','Recency','days since last purchase','≤ ')}${row('f','Frequency','purchases in window','≥ ')}${row('m','Monetary','net spend (EUR) in window','≥ ')}</table></div>
+ <div class="ann-target" style="margin-top:16px">${B(12)}<div class="field"><label class="lb">Qualifying cells</label>${pre}</div><div class="rg">${grid}</div>
+ <div class="field"><span class="muted">Rows = Recency score (5 = most recent), columns = Frequency score.</span><span>Minimum Monetary score</span><select class="in" data-act="cfg" data-num="1" data-path="rfm.minM">${opts([1,2,3,4,5],r.minM)}</select></div></div></section>`;
+}
+function secSeq(){
+ const s=S.seq,n=s.steps.length,a=s.absence;
+ const steps=s.steps.map((st,i)=>{
+  const node=`<div class="node"><div class="nlabel">Step ${i+1}${i?' (after previous)':''}</div><select class="in" data-act="cfg" data-path="seq.steps.${i}.event">${opts(EVENTS,st.event)}</select><input class="in" placeholder="where (optional)" data-act="cfg" data-path="seq.steps.${i}.prop" value="${esc(st.prop)}">${n>2?`<button class="x" data-act="delstep" data-i="${i}">remove step</button>`:''}</div>`;
+  const nx=s.steps[i+1];
+  const arrow=nx?`<div class="arrow">then within<span><input class="in w60" type="number" min="1" data-act="cfg" data-num="1" data-path="seq.steps.${i+1}.within" value="${nx.within}"> <select class="in" data-act="cfg" data-path="seq.steps.${i+1}.unit">${opts(UNITS,nx.unit)}</select></span>→</div>`:'';
+  return node+arrow}).join('');
+ const abs=`<div class="arrow">and then</div><div class="node absent ann-target">${B(14)}<div class="nlabel"><label class="chk"><input type="checkbox" data-act="cfg" data-path="seq.absence.enabled" ${a.enabled?'checked':''}> NOT (absence)</label></div><select class="in" data-act="cfg" data-path="seq.absence.event">${opts(EVENTS,a.event)}</select><span>within <input class="in w60" type="number" min="1" data-act="cfg" data-num="1" data-path="seq.absence.n" value="${a.n}"> <select class="in" data-act="cfg" data-path="seq.absence.u">${opts(UNITS,a.u)}</select></span></div>`;
+ return `<section class="card"><h2><span class="step">F</span> Sequence (A then B)</h2>
+ <label class="chk"><input type="checkbox" data-act="cfg" data-path="seq.enabled" ${s.enabled?'checked':''}> Require a sequence of events (ANDed with the entry rules)</label>
+ <div class="ann-target" style="margin-top:12px">${B(13)}<div class="flow${s.enabled?'':' dim'}">${steps}${abs}</div>
+ <div class="gadd">${n<4?'<button data-act="addstep">+ step</button>':''}</div></div></section>`;
+}
+function secSupp(){
+ const p=S.supp;
+ const chips=AUDIENCES.map(a=>`<button class="chip${p.lists.includes(a)?' on':''}" data-act="toggle" data-path="supp.lists" data-val="${a}">${a}</button>`).join(' ');
+ return `<section class="card"><h2><span class="step">G</span> Suppression</h2>
+ <div class="field ann-target">${B(15)}<label class="lb">Exclude members of</label>${chips}</div>
+ <div class="field ann-target">${B(16)}<label class="lb">Frequency cap</label><span>max</span><input class="in w60" type="number" min="0" data-act="cfg" data-num="1" data-path="supp.capN" value="${p.capN}"><span>messages per customer per</span><input class="in w60" type="number" min="1" data-act="cfg" data-num="1" data-path="supp.capDays" value="${p.capDays}"><span>days</span>
+ <label class="chk"><input type="checkbox" data-act="cfg" data-path="supp.consent" ${p.consent?'checked':''}> Require marketing consent</label></div></section>`;
+}
+function secAct(){
+ const a=S.act;
+ const rows=Object.keys(DESTS).map(k=>`<tr><td><label class="chk"><input type="checkbox" data-act="cfg" data-path="act.dests.${k}.on" ${a.dests[k].on?'checked':''}> ${DESTS[k]}</label></td><td><select class="in" data-act="cfg" data-path="act.dests.${k}.sync">${opts(SYNC,a.dests[k].sync)}</select></td></tr>`).join('');
+ const pay=['customer_id'].concat(S.attributes.map(x=>x.name)).map(n=>`<button class="chip${a.payload.includes(n)?' on':''}" data-act="toggle" data-path="act.payload" data-val="${n}">${n}</button>`).join(' ');
+ return `<section class="card"><h2><span class="step">H</span> Activation — where members go</h2>
+ <div class="ann-target">${B(17)}<table class="tbl"><tr><th>Destination</th><th>Sync mode</th></tr>${rows}</table></div>
+ <div class="ann-target" style="margin-top:16px">${B(18)}<div class="field"><label class="lb">Payload fields</label>${pay}</div>
+ <div class="field"><label class="lb">On enter</label><select class="in" data-act="cfg" data-path="act.onEnter">${opts(['add to destination list','trigger campaign / journey','send event only'],a.onEnter)}</select>
+ <span>On exit</span><select class="in" data-act="cfg" data-path="act.onExit">${opts(['remove from destination list','do nothing'],a.onExit)}</select></div></div></section>`;
+}
+const SAMPLE=[['cust_42','DE','platinum',2,4,4],['cust_118','AT','platinum',1,5,5],['cust_204','DE','gold',2,3,3],['cust_377','DE','platinum',2,5,3],['cust_509','AT','silver',1,3,4]];
+function secReview(){
+ const why=['entry rules ✔'].concat(S.rfm.use?['RFM ✔']:[],S.seq.enabled?['sequence ✔']:[],['not suppressed ✔']).join(' · ');
+ const rows=SAMPLE.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td><td>${x[2]}</td><td>R${x[3]} F${x[4]} M${x[5]}</td><td>${why}</td></tr>`).join('');
+ return `<section class="card ann-target">${B(19)}<h2><span class="step">I</span> Review — size estimate and preview</h2>
+ <div class="est">≈ <b id="estNum"></b> customers <span class="muted">(dummy number from a fake formula)</span></div>
+ <table class="tbl"><tr><th>Customer</th><th>Market</th><th>Tier</th><th>RFM</th><th>Why they match (dummy)</th></tr>${rows}</table>
+ <div class="field" style="margin-top:12px"><button class="btn" data-act="dummy" data-msg="Dummy UI: draft not saved">Save draft</button>
+ <button class="btn" data-act="dummy" data-msg="Validation results are on the right">Validate</button>
+ <button class="btn primary" data-act="dummy" data-msg="Dummy UI: nothing was activated">Activate audience</button></div></section>`;
+}
+function renderBuilder(){
+ $('#builder').innerHTML=[secBasics(),secAttrs(),secEntry(),secExit(),secRfm(),secSeq(),secSupp(),secAct(),secReview()].join('');
+ updateOutputs();
+}
+const q=v=>`'${String(v).replace(/'/g,"''")}'`;
+const unitSql=u=>u.toUpperCase().replace(/S$/,'');
+function ser(n){
+ if(n.type==='group')return {[n.op]:n.children.map(ser)};
+ if(n.kind==='attribute'){const t=attrType(n.field),o={attribute:n.field,op:n.op};
+  if(n.op==='in')o.value=String(n.value).split(',').map(s=>s.trim()).filter(Boolean);
+  else if(t==='number')o.value=Number(n.value);else if(t==='string')o.value=n.value;return o}
+ if(n.kind==='event'){const o={event:n.field,op:n.op};if(n.op==='performed at least')o.count=Number(n.value)||1;
+  o.within={n:Number(n.w)||1,unit:n.u};if(n.prop)o.where=n.prop;return o}
+ if(n.kind==='rfm')return {rfm:n.field.split(' ')[0],op:n.op,value:Number(n.value)};
+ return {audience:n.field,op:n.op};
+}
+function buildSpec(){
+ const r=S.rfm,s=S.seq;
+ const sp={audience_id:slug(S.name),name:S.name,description:S.desc,evaluation:S.mode,
+  sources:{live_events:S.sources.live,historical:S.sources.hist,reference_attributes:S.sources.ref},
+  lookback:{n:S.lookback.n,unit:S.lookback.u},entry:{rules:ser(S.entry)}};
+ if(r.use)sp.entry.rfm={cells:r.cells.map(k=>{const p=k.split('-');return {r:+p[0],f:+p[1]}}),min_m:r.minM,window_days:r.windowDays,thresholds:{r:r.r,f:r.f,m:r.m}};
+ if(s.enabled)sp.entry.sequence={steps:s.steps.map((x,i)=>Object.assign({event:x.event},x.prop?{where:x.prop}:{},i?{within:{n:x.within,unit:x.unit}}:{})),
+  not:s.absence.enabled?{event:s.absence.event,within:{n:s.absence.n,unit:s.absence.u}}:undefined};
+ sp.exit={rules:ser(S.exit),when_entry_false:S.exitOpts.whenEntryFalse,max_days:S.exitOpts.maxDays,reentry_cooldown_days:S.exitOpts.cooldown};
+ sp.suppression={lists:S.supp.lists,frequency_cap:{max:S.supp.capN,per_days:S.supp.capDays},consent_required:S.supp.consent};
+ sp.activation={destinations:Object.keys(S.act.dests).filter(k=>S.act.dests[k].on).map(k=>({destination:k,sync:S.act.dests[k].sync})),
+  payload:S.act.payload,on_enter:S.act.onEnter,on_exit:S.act.onExit};
+ return sp;
+}
+function condSql(c){
+ if(c.kind==='attribute'){const t=attrType(c.field),f='a.'+c.field,v=c.value;
+  if(t==='boolean')return f+(c.op==='is true'?' = TRUE':' = FALSE');
+  if(c.op==='in')return f+' IN ('+String(v).split(',').map(x=>x.trim()).filter(Boolean).map(q).join(', ')+')';
+  if(c.op==='contains')return f+' LIKE '+q('%'+v+'%');
+  return f+' '+(c.op==='!='?'<>':c.op)+' '+(t==='number'?(Number(v)||0):q(v))}
+ if(c.kind==='event'){const w=`window_count(${q(c.field)}${c.prop?', '+q(c.prop):''}, INTERVAL '${Number(c.w)||1}' ${unitSql(c.u)})`;
+  return c.op==='performed at least'?w+' >= '+(Number(c.value)||1):w+' = 0'}
+ if(c.kind==='rfm')return 'rfm.'+c.field[0]+'_score '+c.op+' '+(Number(c.value)||0);
+ return (c.op==='is member of'?'':'NOT ')+'IS_MEMBER('+q(c.field)+')';
+}
+function predSql(g,ind){
+ const p=g.children.map(c=>c.type==='group'?predSql(c,ind+'  '):condSql(c));
+ if(!p.length)return 'TRUE';
+ return p.length===1?p[0]:'('+p.join('\n'+ind+'  '+(g.op==='all'?'AND ':'OR '))+')';
+}
+function rfmSql(){const r=S.rfm;if(!r.cells.length)return 'FALSE  /* no RFM cells selected */';
+ return '(rfm.r_score, rfm.f_score) IN ('+r.cells.map(k=>'('+k.replace('-',', ')+')').join(', ')+')\n  AND rfm.m_score >= '+r.minM}
+function seqSql(){
+ const s=S.seq,L='ABCD',w=s.steps.slice(1).reduce((t,x)=>t+(Number(x.within)||0)*UMIN[x.unit],0);
+ const def=s.steps.map((st,i)=>`    ${L[i]} AS event = ${q(st.event)}${st.prop?' AND '+st.prop:''}`).join(',\n');
+ let o=`-- SEQUENCE: Flink MATCH_RECOGNIZE (or CEP: ${s.steps.map(x=>x.event).join(' followedBy ')})\nSELECT customer_id, match_time FROM clickstream\nMATCH_RECOGNIZE (\n  PARTITION BY customer_id ORDER BY event_time\n  MEASURES LAST(${L[s.steps.length-1]}.event_time) AS match_time\n  AFTER MATCH SKIP PAST LAST ROW\n  PATTERN (${L.slice(0,s.steps.length).split('').join(' ')}) WITHIN INTERVAL '${w}' MINUTE\n  DEFINE\n${def}\n);`;
+ if(s.absence.enabled)o+=`\n-- ABSENCE: qualify only if NO ${q(s.absence.event)} arrives within ${s.absence.n} ${s.absence.u} after the last step.\n-- Implemented with notFollowedBy(...).within(...) or a keyed timer. Fires when the window closes.`;
+ return o;
+}
+function hasExit(){return S.exit.children.length>0||S.exitOpts.whenEntryFalse||S.exitOpts.maxDays>0}
+function buildSql(){
+ const id=slug(S.name),m=S.mode,L=[],on=Object.keys(S.act.dests).filter(k=>S.act.dests[k].on);
+ const rf=S.rfm.use?'\n  AND '+rfmSql():'',lb=S.lookback.n+' '+S.lookback.u;
+ const join=S.rfm.use?'\nJOIN rfm_scores FOR SYSTEM_TIME AS OF c.event_time AS rfm ON c.customer_id = rfm.customer_id':'';
+ L.push(`-- Illustrative pseudo-SQL for audience "${id}" (simplified, not production code)`);
+ if(m!=='batch'){
+  L.push(`\n-- ENTRY: Flink SQL, evaluated per event (lookback ${lb})\nINSERT INTO membership_changes   -- becomes Redis SADD + "entered" event\nSELECT 'audience:${id}' AS audience_key, c.customer_id, 'enter' AS action\nFROM clickstream AS c\nJOIN customer_attributes FOR SYSTEM_TIME AS OF c.event_time AS a ON c.customer_id = a.customer_id${join}\nWHERE ${predSql(S.entry,'')}${rf};`);
+  if(S.seq.enabled)L.push('\n'+seqSql()+'\n-- Entry = entry rules AND sequence match.');
+  if(hasExit())L.push(`\n-- EXIT: evaluated per event\nINSERT INTO membership_changes   -- becomes Redis SREM + "exited" event\nSELECT 'audience:${id}', c.customer_id, 'exit'\nFROM clickstream AS c JOIN customer_attributes FOR SYSTEM_TIME AS OF c.event_time AS a ON c.customer_id = a.customer_id\nWHERE ${S.exit.children.length?predSql(S.exit,''):'FALSE'}${S.exitOpts.whenEntryFalse?'\n   OR NOT ('+predSql(S.entry,'')+')':''};${S.exitOpts.maxDays>0?`\n-- Auto-exit: Redis TTL or Flink timer after ${S.exitOpts.maxDays} days. Re-entry cool-down: ${S.exitOpts.cooldown} days.`:''}`);
+ }
+ if(m!=='realtime')L.push(`\n-- BATCH: SQL on the lakehouse, run by the reverse-ETL tool on a schedule\nSELECT a.customer_id\nFROM lakehouse.customer_attributes a${S.rfm.use?'\nJOIN lakehouse.rfm_snapshot rfm ON rfm.customer_id = a.customer_id':''}\nWHERE ${predSql(S.entry,'')}${rf}\n  AND a.snapshot_date >= CURRENT_DATE - INTERVAL '${S.lookback.n}' ${unitSql(S.lookback.u)};\n-- Exits = customers in the previous run that are missing from this run.`);
+ L.push(`\n-- AT ACTIVATION\n-- members = SDIFF audience:${id} ${S.supp.lists.map(x=>'suppress:'+x).join(' ')||'(no suppression lists)'}\n-- frequency cap: ${S.supp.capN} per ${S.supp.capDays} days · consent required: ${S.supp.consent?'yes':'no'}\n-- destinations: ${on.map(k=>DESTS[k]+' ('+S.act.dests[k].sync+')').join(', ')||'none'}`);
+ return L.join('\n');
+}
+function buildPlan(){
+ const P=[],m=S.mode,rt=m!=='batch',bt=m!=='realtime',comp=S.attributes.filter(a=>a.kind==='computed').length;
+ P.push(['ctl','Spec saved to the config store as audience:'+slug(S.name)+' (versioned)']);
+ if(rt)P.push(['build','Flink job: per-event entry evaluation, then Redis SADD and an "entered" event']);
+ if(bt)P.push(['buy','Reverse-ETL SQL on the lakehouse on a schedule, writing membership with a versioned key and atomic swap']);
+ if(hasExit())P.push(rt?['build','Flink exit evaluation: Redis SREM and an "exited" event'+(S.exitOpts.maxDays>0?'; TTL '+S.exitOpts.maxDays+' days':'')]:['buy','Exits computed by diffing this batch run against the previous one']);
+ if(comp&&rt)P.push(['build',comp+' computed attribute(s): Flink aggregation jobs writing to the attribute store (compacted topic + Redis)']);
+ P.push(['buy','Reference attributes: CDC / reverse-ETL into the attribute store']);
+ if(S.rfm.use)P.push(rt?['build','Live RFM scores from Flink windowed aggregations']:['buy','RFM taken from the daily lakehouse snapshot']);
+ if(S.seq.enabled)P.push(['build','Flink CEP / MATCH_RECOGNIZE pattern with per-customer partial-match state'+(S.seq.absence.enabled?' plus an absence timer':'')]);
+ P.push(['both','Shared membership store: Redis sets, rows tagged source = stream or batch']);
+ if(S.supp.lists.length)P.push(['both','Suppression: SDIFF against '+S.supp.lists.length+' exclusion set(s) at activation']);
+ Object.keys(S.act.dests).filter(k=>S.act.dests[k].on).forEach(k=>P.push(['buy','Connector: '+DESTS[k]+' ('+S.act.dests[k].sync+')']));
+ return P;
+}
+function buildWarn(){
+ const W=[],m=S.mode,days=S.lookback.n*UMIN[S.lookback.u]/1440,anyDest=Object.values(S.act.dests).some(d=>d.on);
+ if(S.seq.enabled&&m==='batch')W.push(['warn','Sequencing needs real-time evaluation (Flink CEP). Switch the mode to Real-time or Hybrid.']);
+ if(m!=='batch'&&days>90)W.push(['warn','A '+S.lookback.n+' '+S.lookback.u+' lookback in real-time means very large Flink state. The compiler would read the history from the lakehouse instead (hybrid).']);
+ if(m!=='batch'&&!S.sources.live)W.push(['warn','Real-time mode needs "Live events" as a data source.']);
+ if(m!=='realtime'&&!S.sources.hist)W.push(['warn','Batch mode needs "Historical data" as a data source.']);
+ if(!S.entry.children.length)W.push(['warn','Entry rules are empty, so everyone would qualify.']);
+ if(!hasExit())W.push(['warn','No exit is defined, so members stay in the audience forever.']);
+ if(!anyDest)W.push(['warn','No destination selected, so nobody will receive anything.']);
+ if(!S.supp.consent)W.push(['warn','Marketing consent is not required. Check your privacy policy before activating.']);
+ if(m==='batch'&&Object.values(S.act.dests).some(d=>d.on&&d.sync==='near real-time'))W.push(['info','Batch audiences refresh on a schedule, so "near real-time" sync is only as fresh as the last batch run.']);
+ if(S.seq.enabled&&S.seq.absence.enabled)W.push(['info','The absence step fires when its window closes, not at the last step. This delay is intentional and needs processing-time timers or idle-watermark handling.']);
+ if(!W.length)W.push(['ok','No issues found. The spec can be compiled.']);
+ return W;
+}
+function cf(c){return c.op==='did not perform'?0.8:0.15+(hash(c.kind+c.field+c.op+c.value)%50)/100}
+function gf(g){const f=g.children.map(c=>c.type==='group'?gf(c):cf(c));if(!f.length)return 1;
+ return g.op==='all'?f.reduce((a,b)=>a*b,1):1-f.reduce((a,b)=>a*(1-b),1)}
+function estimate(){let n=2400000*gf(S.entry);
+ if(S.rfm.use)n*=(S.rfm.cells.length/25)*(1-(S.rfm.minM-1)*0.1);
+ if(S.seq.enabled)n*=0.05;n*=Math.pow(0.9,S.supp.lists.length);return Math.max(0,Math.round(n/100)*100)}
+function updateOutputs(){
+ $('#tabs').innerHTML=[['spec','JSON spec'],['sql','Compiled SQL'],['plan','Execution plan']].map(([k,l])=>`<button class="btn${UI.tab===k?' on':''}" data-act="tab" data-val="${k}">${l}</button>`).join('');
+ let h;
+ if(UI.tab==='spec')h=`<pre class="out">${esc(JSON.stringify(buildSpec(),null,2))}</pre>`;
+ else if(UI.tab==='sql')h=`<pre class="out">${esc(buildSql())}</pre>`;
+ else h='<ul class="plan">'+buildPlan().map(([k,t])=>`<li>${tag(k)}<span>${esc(t)}</span></li>`).join('')+'</ul>';
+ $('#outBox').innerHTML=h;
+ $('#warnings').innerHTML=buildWarn().map(([k,t])=>`<div class="wl ${k}">${esc(t)}</div>`).join('');
+ const e=$('#estNum');if(e)e.textContent=estimate().toLocaleString('en-US');
+ markActive();
+}
+function markActive(){document.querySelectorAll('.badge').forEach(b=>b.classList.toggle('active',+b.dataset.ann===UI.ann))}
+function setOverlay(on){document.body.classList.toggle('overlay-on',on);$('#ovl').checked=on}
+function applyExp(){$('#expBody').style.display=UI.expOpen?'':'none';$('#expToggle').textContent=UI.expOpen?'Collapse':'Expand'}
+function renderExplainer(){
+ const a=ANN[UI.ann],body=$('#expBody');
+ $('#expCount').textContent=a?'badge '+UI.ann+' of 21':'';
+ if(!a){body.innerHTML='<p class="muted" style="grid-column:1/-1">Switch on "Functionality overlay" and click a numbered badge, or press "Start walkthrough".</p>';return}
+ body.innerHTML=`<div><div class="exp-num">${UI.ann}</div><h3>${esc(a.t)}</h3><div class="tags">${tag(a.eng)}<span class="tag cap">${esc(a.cap)}</span></div></div>
+ <div><h4>What the marketer does</h4><p>${esc(a.who)}</p></div>
+ <div><h4>What the system does</h4><p>${esc(a.sys)}</p></div>
+ <div><h4>Spec path</h4><p><code>${esc(a.spec)}</code></p><h4>Stack</h4><p>${esc(a.comp)}</p></div>`;
+}
+function selectAnn(n,scroll){
+ UI.ann=n;renderExplainer();markActive();
+ if(scroll){const b=document.querySelector('.badge[data-ann="'+n+'"]');
+  if(b&&b.parentElement&&b.parentElement.scrollIntoView)b.parentElement.scrollIntoView({behavior:'smooth',block:'center'})}
+}
+function go(d){const n=Math.min(21,Math.max(1,(UI.ann||0)+d));setOverlay(true);UI.expOpen=true;applyExp();selectAnn(n,true)}
+function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>{t.style.display='none'},2200)}
+function renderPresets(){$('#presets').innerHTML=Object.keys(PRESETS).map(k=>`<button class="${UI.preset===k?'on':''}" data-act="preset" data-val="${k}">${PRESETS[k].label}</button>`).join('')}
+function renderCoverage(){
+ $('#cov').innerHTML='<tr><th>#</th><th>Capability</th><th>Badges</th><th>What the marketer sees</th><th>Runs on</th><th>Buy / build</th></tr>'+
+  COV.map((r,i)=>`<tr><td>${i<9?i+1:'+'}</td><td>${r[0]}</td><td>${r[1].map(n=>`<a href="#" data-annlink="${n}">${n}</a>`).join(' ')}</td><td>${r[2]}</td><td>${r[3]}</td><td>${tag(r[4])}</td></tr>`).join('');
+ $('#gaps').innerHTML=GAPS.map(g=>`<li>${esc(g)}</li>`).join('');
+}
+document.addEventListener('input',e=>{
+ const t=e.target,a=t.dataset&&t.dataset.act;if(!a)return;
+ if(a==='set'){const n=findNode(t.dataset.id);if(!n)return;const p=t.dataset.prop;n[p]=t.value;
+  if(p==='kind')resetCond(n);
+  if(p==='field'&&n.kind==='attribute'){const o=opsFor(n);if(!o.includes(n.op)){n.op=o[0];n.value=defVal(n)}}
+  if(p==='op'&&n.kind==='event'&&n.op==='performed at least'&&!n.value)n.value=1;
+  if(t.dataset.struct)renderBuilder();else updateOutputs()}
+ else if(a==='cfg'){const v=t.type==='checkbox'?t.checked:t.dataset.num?Number(t.value):t.value;setPath(t.dataset.path,v);
+  if(t.dataset.path==='seq.enabled')renderBuilder();else updateOutputs()}
+});
+document.addEventListener('click',e=>{
+ const t=e.target,bd=t.closest('.badge');
+ if(bd){selectAnn(+bd.dataset.ann);return}
+ const lk=t.closest('[data-annlink]');
+ if(lk){e.preventDefault();setOverlay(true);selectAnn(+lk.dataset.annlink,true);return}
+ const el=t.closest('button[data-act]');if(!el)return;
+ const a=el.dataset.act,id=el.dataset.id,v=el.dataset.val;
+ if(a==='op'){findNode(id).op=v;renderBuilder()}
+ else if(a==='addcond'){const c=cond('attribute','','=','');resetCond(c);findNode(id).children.push(c);renderBuilder()}
+ else if(a==='addgroup'){const c=cond('attribute','','=','');resetCond(c);findNode(id).children.push(grp('any',[c]));renderBuilder()}
+ else if(a==='del'){const p=parentOf(id,S.entry)||parentOf(id,S.exit);if(p){p.children=p.children.filter(c=>c.id!==id);renderBuilder()}}
+ else if(a==='cfgbtn'){setPath(el.dataset.path,v);renderBuilder()}
+ else if(a==='toggle'){togglePath(el.dataset.path,v);renderBuilder()}
+ else if(a==='rfmcell'){const c=S.rfm.cells,k=el.dataset.key,i=c.indexOf(k);if(i<0)c.push(k);else c.splice(i,1);renderBuilder()}
+ else if(a==='rfmpreset'){if(v==='clear')S.rfm.cells=[];else{const p=RFM_PRESETS[v];S.rfm.cells=cells(p[0],p[1]);S.rfm.use=true}renderBuilder()}
+ else if(a==='addstep'){S.seq.steps.push({event:'purchase',prop:'',within:30,unit:'minutes'});renderBuilder()}
+ else if(a==='delstep'){S.seq.steps.splice(+el.dataset.i,1);renderBuilder()}
+ else if(a==='addattr'){const n=UI.newAttr;UI.newErr='';
+  if(!/^[a-z][a-z0-9_]*$/.test(n.name))UI.newErr='Use snake_case, e.g. purchases_90d';
+  else if(S.attributes.some(x=>x.name===n.name))UI.newErr='That attribute already exists';
+  else{S.attributes.push({name:n.name,type:'number',kind:'computed',refresh:'real-time',
+   def:n.agg==='days since last event'?'days since last '+n.event:n.agg+' · '+n.event+(n.prop?' where '+n.prop:'')+' · last '+n.w+' '+n.u});n.name='';n.prop=''}
+  renderBuilder()}
+ else if(a==='delattr'){const nm=el.dataset.name;S.attributes=S.attributes.filter(x=>x.name!==nm);
+  [S.entry,S.exit].forEach(r=>eachCond(r,c=>{if(c.kind==='attribute'&&c.field===nm)resetCond(c)}));S.act.payload=S.act.payload.filter(x=>x!==nm);renderBuilder()}
+ else if(a==='tab'){UI.tab=v;updateOutputs()}
+ else if(a==='preset'){UI.preset=v;S=PRESETS[v].make();renderPresets();renderBuilder()}
+ else if(a==='dummy')toast(el.dataset.msg);
+});
+$('#ovl').addEventListener('change',e=>setOverlay(e.target.checked));
+$('#tour').addEventListener('click',()=>{setOverlay(true);UI.expOpen=true;applyExp();selectAnn(1,true)});
+$('#prev').addEventListener('click',()=>go(-1));
+$('#next').addEventListener('click',()=>go(1));
+$('#expToggle').addEventListener('click',()=>{UI.expOpen=!UI.expOpen;applyExp()});
+renderPresets();renderBuilder();renderCoverage();renderExplainer();applyExp();
+</script>
+</body>
+</html>

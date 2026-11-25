@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Composable CDP Prototype: from raw events to audiences</title>
+<meta name="description" content="A prototype showing how a composable Customer Data Platform turns raw customer events into marketing audiences, with an interactive audience builder.">
+<meta property="og:title" content="Composable CDP Prototype">
+<meta property="og:description" content="How a composable CDP turns raw customer events into marketing audiences. Architecture overview and interactive prototype.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%232563eb'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#f4f6fb;--panel:#fff;--fg:#1d2433;--muted:#566074;--border:#d9dfeb;--accent:#2563eb;--soft:#f1f4fa;
+--build:#b42318;--buildbg:#fee4e2;--buy:#175cd3;--buybg:#d1e9ff;--both:#b54708;--bothbg:#fef0c7;--ctl:#475467;--ctlbg:#eaecf0;--ann:#7c3aed}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1117;--panel:#161b22;--fg:#e6edf3;--muted:#9aa3ad;--border:#30363d;--soft:#1c232d;
+--buildbg:#3b1512;--buybg:#10243f;--bothbg:#3a2a0c;--ctlbg:#262c36;--build:#ff9c91;--buy:#8cc4ff;--both:#fdb64b;--ctl:#b6bdc9}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+h1,h2,h3{line-height:1.25;margin:0}
+p{margin:0 0 12px}
+a{color:var(--accent)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+section{padding:40px 0 8px}
+h2{font-size:24px;margin-bottom:6px}
+.lead{color:var(--muted);max-width:760px;margin-bottom:22px}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+/* hero */
+.hero{padding:56px 0 36px;border-bottom:1px solid var(--border);background:var(--panel)}
+.hero h1{font-size:clamp(28px,5vw,42px);margin-bottom:12px}
+.hero p.sub{font-size:18px;color:var(--muted);max-width:760px}
+.notice{margin-top:18px;padding:12px 16px;border:1px solid var(--border);border-left:4px solid var(--ann);background:var(--soft);border-radius:10px;max-width:760px;font-size:15px}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.btn{display:inline-block;padding:11px 20px;border-radius:10px;font-weight:600;text-decoration:none;border:1px solid var(--border);color:var(--fg);background:var(--panel)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:hover{opacity:.9}
+/* cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.card h3{font-size:16px;margin-bottom:6px}
+.card p{margin:0;color:var(--muted);font-size:15px}
+.num{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:var(--accent);color:#fff;font-weight:700;font-size:13px;margin-bottom:8px}
+/* tags */
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.tag.build{background:var(--buildbg);color:var(--build)}.tag.buy{background:var(--buybg);color:var(--buy)}
+.tag.both{background:var(--bothbg);color:var(--both)}.tag.ctl{background:var(--ctlbg);color:var(--ctl)}
+/* architecture diagram */
+.arch{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
+.layer{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:stretch;padding:12px 0;border-top:1px dashed var(--border)}
+.layer:first-child{border-top:0}
+.layer .name{font-weight:700;font-size:14px}
+.layer .name small{display:block;font-weight:400;color:var(--muted);font-size:12.5px;margin-top:2px}
+.boxes{display:flex;flex-wrap:wrap;gap:10px}
+.box{flex:1 1 150px;border:1px solid var(--border);background:var(--soft);border-radius:10px;padding:10px 12px;font-size:14px}
+.box b{display:block;font-size:14px;margin-bottom:2px}
+.box span{color:var(--muted);font-size:13px}
+.box.build{border-color:var(--build)}.box.buy{border-color:var(--buy)}.box.both{border-color:var(--both)}.box.ctl{border-color:var(--ann)}
+.down{text-align:center;color:var(--muted);font-size:13px;margin:-2px 0}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center;font-size:13px;color:var(--muted)}
+/* flow */
+.steps{counter-reset:s;display:grid;gap:12px}
+.step{display:grid;grid-template-columns:42px 1fr;gap:14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.step::before{counter-increment:s;content:counter(s);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700}
+.step h3{font-size:16px;margin-bottom:2px}
+.step p{margin:0;color:var(--muted);font-size:15px}
+/* table */
+.tbl{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:14.5px}
+.tbl th,.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+.tbl th{background:var(--soft);font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.tbl tr:last-child td{border-bottom:0}
+.scroll{overflow-x:auto}
+ul.clean{margin:0;padding-left:20px;color:var(--muted)}
+ul.clean li{margin:6px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+footer{margin-top:48px;padding:28px 0 48px;border-top:1px solid var(--border);color:var(--muted);font-size:14px}
+@media (max-width:760px){.layer{grid-template-columns:1fr;gap:8px}.two{grid-template-columns:1fr}.hero{padding-top:40px}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Portfolio project · Composable CDP</div>
+    <h1>From raw customer events to marketing audiences</h1>
+    <p class="sub">A prototype developed to show how a composable Customer Data Platform (CDP) is put together, and how a marketer builds an audience on top of it.</p>
+    <div class="notice"><b>Why this is a prototype.</b> I don't have access to a production CDP to show my work, so I designed and built this prototype to demonstrate the same thinking. The architecture is real and the audience builder is fully interactive. The data is fictional (a made-up pet-food retailer) and there are no live systems behind it.</div>
+    <div class="cta">
+      <a class="btn primary" href="audience-composer.html">Open the interactive audience builder →</a>
+      <a class="btn" href="#architecture">See the architecture</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section id="what">
+  <h2>What is a composable CDP?</h2>
+  <p class="lead">A traditional CDP is one product that does everything. A composable CDP builds the same capability from best-fit parts around the company's own data warehouse or lakehouse. The business keeps control of its data, and each part can be bought or replaced independently.</p>
+  <div class="cards">
+    <div class="card"><h3>Your data stays home</h3><p>Customer data lives in the company's own lakehouse, not copied into a vendor's black box.</p></div>
+    <div class="card"><h3>Pick the right tool per job</h3><p>Buy commodity pieces such as connectors to ad platforms. Build the pieces that give real advantage, such as live audience decisions.</p></div>
+    <div class="card"><h3>Marketers stay in charge</h3><p>A single audience builder lets marketers define who they want to reach, without writing code or joins.</p></div>
+  </div>
+</section>
+
+<section id="architecture">
+  <h2>The architecture</h2>
+  <p class="lead">Data flows top to bottom: collected from sources, processed live and in batch, stored in shared stores, defined by a marketer in the audience builder, then delivered to the tools that contact customers.</p>
+  <div class="arch">
+    <div class="layer"><div class="name">1 · Sources<small>Where data starts</small></div><div class="boxes">
+      <div class="box"><b>Website &amp; app events</b><span>Product views, add to cart, purchases</span></div>
+      <div class="box"><b>CRM &amp; loyalty</b><span>Tier, country, consent</span></div>
+      <div class="box"><b>Orders &amp; products</b><span>Transactions, catalogue</span></div>
+    </div></div>
+    <div class="down">▼</div>
+    <div class="layer"><div class="name">2 · Ingestion<small>Moving data in</small></div><div class="boxes">
+      <div class="box buy"><b>Event streaming (Kafka)</b><span>Every customer action as it happens</span></div>
+      <div class="box buy"><b>Change capture (CDC)</b><span>Keeps CRM data in sync</span></div>
+    </div></div>
+    <div class="down">▼</div>
+    <div class="layer"><div class="name">3 · Processing<small>Deciding who qualifies</small></div><div class="boxes">
+      <div class="box build"><b>Stream processing (Flink)</b><span>Real-time rules, sequences like "viewed, then added to cart, but didn't buy", live scores</span></div>
+      <div class="box buy"><b>Batch SQL on the lakehouse</b><span>Scheduled audiences from history, run by a reverse-ETL tool</span></div>
+    </div></div>
+    <div class="down">▼</div>
+    <div class="layer"><div class="name">4 · Storage<small>Shared truth</small></div><div class="boxes">
+      <div class="box"><b>Lakehouse (Iceberg)</b><span>Full history and customer attributes</span></div>
+      <div class="box"><b>Attribute store</b><span>Fresh customer traits for live decisions</span></div>
+      <div class="box both"><b>Audience membership (Redis)</b><span>Who is in each audience right now</span></div>
+    </div></div>
+    <div class="down">▲ ▼</div>
+    <div class="layer"><div class="name">5 · Audience builder<small>Control plane</small></div><div class="boxes">
+      <div class="box ctl"><b>Audience Composer (this prototype)</b><span>A marketer defines the audience. The tool produces a definition (a JSON spec), checks it for mistakes, and hands it to a compiler that creates the right jobs. The UI itself never calculates audiences.</span></div>
+    </div></div>
+    <div class="down">▼</div>
+    <div class="layer"><div class="name">6 · Activation<small>Reaching customers</small></div><div class="boxes">
+      <div class="box buy"><b>Connectors</b><span>Braze, Meta, Google Ads, email, webhooks</span></div>
+      <div class="box both"><b>Suppression &amp; consent</b><span>Exclusions, send limits, marketing consent</span></div>
+    </div></div>
+    <div class="legend"><b>Key:</b>
+      <span class="tag build">BUILD</span> custom-built
+      <span class="tag buy">BUY</span> off-the-shelf tool
+      <span class="tag both">BUY + BUILD</span> mix
+      <span class="tag ctl">CONTROL PLANE</span> authoring layer
+    </div>
+  </div>
+</section>
+
+<section id="flow">
+  <h2>How an audience gets created</h2>
+  <p class="lead">The audience builder walks through these steps. Each one is a section of the interactive prototype.</p>
+  <div class="steps">
+    <div class="step"><div><h3>Describe the audience</h3><p>Name it, choose how fresh it must be (live per event, scheduled batch, or both), pick the data sources and set how far back to look.</p></div></div>
+    <div class="step"><div><h3>Define who qualifies</h3><p>Build rules from customer attributes, behaviours and purchase-value scores (Recency, Frequency, Monetary). Combine them with "all of" and "any of" groups.</p></div></div>
+    <div class="step"><div><h3>Add sequences and exits</h3><p>Describe journeys such as "viewed a product, added it to the cart, but did not check out within 30 minutes". Decide when people leave the audience.</p></div></div>
+    <div class="step"><div><h3>Apply guardrails</h3><p>Exclude unsubscribed or recent buyers, cap how often a customer is contacted, and require marketing consent.</p></div></div>
+    <div class="step"><div><h3>Choose where it goes</h3><p>Select destinations such as Braze or ad platforms, and whether they update instantly or on a schedule.</p></div></div>
+    <div class="step"><div><h3>Review before launch</h3><p>Check validation warnings, an estimated size and sample members. The tool shows the generated definition, the SQL it would produce, and which parts run on bought tools and which on custom-built ones.</p></div></div>
+  </div>
+</section>
+
+<section id="buybuild">
+  <h2>Where to buy and where to build</h2>
+  <p class="lead">A key decision in a composable CDP is which parts to buy and which to build. This table summarises the reasoning shown in the prototype.</p>
+  <div class="scroll"><table class="tbl">
+    <tr><th>Capability</th><th>In plain words</th><th>Runs on</th><th>Approach</th></tr>
+    <tr><td>Real-time audiences</td><td>Customers join or leave within seconds of an action</td><td>Stream processing</td><td><span class="tag build">BUILD</span></td></tr>
+    <tr><td>Batch audiences</td><td>Large audiences refreshed on a schedule from history</td><td>Lakehouse SQL + reverse-ETL</td><td><span class="tag buy">BUY</span></td></tr>
+    <tr><td>Sequences (A then B)</td><td>Customer did one thing, then another, in order and in time</td><td>Stream pattern matching</td><td><span class="tag build">BUILD</span></td></tr>
+    <tr><td>Exit rules</td><td>Removing people promptly, for example after they buy</td><td>Stream processing</td><td><span class="tag build">BUILD</span></td></tr>
+    <tr><td>Purchase-value scoring (RFM)</td><td>How recently, how often and how much a customer buys</td><td>Stream + daily snapshot</td><td><span class="tag both">BUY + BUILD</span></td></tr>
+    <tr><td>Suppression</td><td>Not contacting people who shouldn't be contacted</td><td>Membership store + activation</td><td><span class="tag both">BUY + BUILD</span></td></tr>
+    <tr><td>Sending to channels</td><td>Keeping Braze, ad platforms and email up to date</td><td>Connectors</td><td><span class="tag buy">BUY</span></td></tr>
+  </table></div>
+  <p style="margin-top:12px;color:var(--muted);font-size:15px">The reasoning: commodity plumbing (connectors, scheduled syncs) is cheaper to buy. Logic that must react in seconds, or that depends on the order of events, is where custom-built stream processing earns its place.</p>
+</section>
+
+<section id="scope">
+  <h2>What this prototype shows, and what it does not</h2>
+  <div class="two">
+    <div class="card"><h3>What it demonstrates</h3>
+      <ul class="clean">
+        <li>How the layers of a composable CDP fit together</li>
+        <li>How a marketer's choices become a structured definition and an execution plan</li>
+        <li>Real-time, batch and hybrid audiences, and why each exists</li>
+        <li>Trade-offs between buying tools and building components</li>
+        <li>Guardrails that catch risky audience set-ups before launch</li>
+      </ul></div>
+    <div class="card"><h3>What a real build would still need</h3>
+      <ul class="clean">
+        <li>Identity resolution (knowing which records are the same person)</li>
+        <li>Roles, approvals and an audit trail</li>
+        <li>Safe editing and backfill of a live audience</li>
+        <li>Connector set-up, retries and rate limits</li>
+        <li>A consent and preference management interface</li>
+        <li>Cost controls and monitoring for streaming jobs</li>
+      </ul></div>
+  </div>
+</section>
+
+<section id="try">
+  <h2>Try it yourself</h2>
+  <p class="lead">The audience builder includes three ready-made scenarios (real-time, sequence and batch). Turn on "Functionality overlay" or press "Start walkthrough" for a guided explanation of every control, written for both business and technical readers.</p>
+  <div class="cta" style="margin-top:0">
+    <a class="btn primary" href="audience-composer.html">Open the interactive audience builder →</a>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><b>A prototype developed</b> to show deeper understanding of composable CDP design, and how a marketer's intent becomes an audience that reaches customers.</p>
+    <p>This is a standalone design and UI prototype. It is separate from my other CDP projects, which are working builds on AWS. This page describes a different, composable architecture and has no running backend.</p>
+    <p>All data, names and numbers are fictional. No real systems, customers or vendors are connected. Vendor and tool names are used only to show where each type of component fits.</p>
+    <!-- Add your links here, for example:
+    <p><a href="https://www.linkedin.com/in/YOUR-PROFILE">LinkedIn</a> · <a href="https://github.com/YOUR-USER/YOUR-REPO">GitHub</a></p> -->
+  </div>
+</footer>
+
+</body>
+</html>
